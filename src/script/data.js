@@ -228,7 +228,8 @@ class Data {
 			return 0;
 		});
 		$("#output").empty();
-		$("#totals").html("<h2>Path of Building:</h2>Auramancer<br>Crimson Jewel<br>Limited to: 1<br>"+
+		$("#totals").html("<h2>Path of Building:</h2><h5>(Copy the below lines, 'Create Custom' in PoB under 'Items', "+
+			"and paste it in) </h5>Auramancer<br>Crimson Jewel<br>Limited to: 1<br>"+
 			"Implicits: 0<br>Quality: 20<br>LevelReq: 0<br>");
 
 		let total_active = 0;
