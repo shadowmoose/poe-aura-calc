@@ -233,6 +233,7 @@ class Data {
 			"Implicits: 0<br>Quality: 20<br>LevelReq: 0<br>");
 
 		let total_active = 0;
+		let seed = 11;//random colors that persist.
 
 		this.gems.forEach((gem)=>{
 			if(!this.gem_info[gem.name]){
@@ -282,10 +283,18 @@ class Data {
 				title.append(gen);
 				cont.append(title);
 
+				let rnd = function random() {
+					let x = Math.sin(seed++) * 10000;
+					return x - Math.floor(x);
+				};
+				let cssHSL = "hsl(" + 360 * rnd() + ',' +
+					(25 + 70 * rnd()) + '%,' +
+					(65 + 10 * rnd()) + '%)';
+
 				stats.forEach((txt)=>{
 					cont.append($("<div>").addClass('gem_mod').text(txt));
 					if(!disabled) {
-						$("#totals").append($('<span>').addClass('total_mod').html(txt) );
+						$("#totals").append($('<span>').addClass('total_mod').css('color', cssHSL).html(txt) );
 					}
 				});
 				if(disabled)
