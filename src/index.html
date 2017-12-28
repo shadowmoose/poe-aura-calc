@@ -9,13 +9,29 @@
 	<link rel="stylesheet" type="text/css" href="./style/style.css" />
 </head>
 <body>
-	<div id="output"></div>
-	<div id="totals"></div>
+	<a href="./">Reload</a><br>
+	<b>% Increased Aura effect: </b><input id="increase" type="number" value="0"/>
+	<br>
+	<table>
+		<tr>
+			<td class="left_td">
+				<div id="output"></div>
+			</td>
+			<td>
+				<div id="totals"></div>
+			</td>
+		</tr>
+	</table>
 </body>
 
 <script>
+	let d;
 	$( document ).ready(function() {
-		let d = new Data();
+		d = new Data();
+	});
+
+	$('#increase').on('change', ()=>{
+		d.calculate();
 	});
 </script>
 

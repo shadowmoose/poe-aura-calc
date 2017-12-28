@@ -5,3 +5,29 @@ body{
 .stat_block{
     margin-bottom: 10px;
 }
+
+.total_mod{
+    display:block;
+}
+
+.gen_input{
+    width: 30px;
+    color: red;
+}
+
+.lvl_input{
+    width: 30px;
+    color: blue;
+}
+
+.disabled_gem{
+    color: #919191 !important;
+}
+
+.gem_title{
+    font-weight: bold;
+}
+
+table{
+    width: 100%;
+}
