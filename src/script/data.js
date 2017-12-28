@@ -128,21 +128,24 @@ class Gem{
 
 	/** Convert this Aura Gem into a Path of Building-friendly string. */
 	static convert_to_pob(grouped_stats, increase){
-		let final = [];
+		let final = {};
 		Object.keys(grouped_stats).forEach((key)=> {
 			let val_array = grouped_stats[key];
-			let out = this.convert_internal_name(key);
-			if(!out)return;
+			let out_name = this.convert_internal_name(key);
+			let out_vals = [];
+			if(!out_name)return;
 			val_array.forEach((val)=>{
 				val = val*increase;
-				if(out.includes('!'))val = val/60;
-				out = out.replace('!','');
-				let rounded = Math.floor(Math.round( val * 100 ) / 100);
-				out = out.replace('#', rounded);
-				if(rounded === 0)out = false;
+				if(out_name.includes('!'))val = val/60;
+				out_name = out_name.replace('!','');
+				let rounded = (Math.round( val * 100 ) / 100);
+				if(!out_name.includes('second'))rounded =  Math.floor(rounded);
+				//out_name = out_name.replace('#', rounded);
+				out_vals.push(rounded);
+				if(rounded === 0)out_name = false;
 			});
-			if(out)
-				final.push(out);
+			if(out_name)
+				final[out_name] = out_vals;
 		});
 		return final;
 	}
@@ -215,6 +218,7 @@ class Data {
 		}.bind(this));
 	}
 
+
 	calculate(){
 		this.gems = this.gems.sort(function(a, b) {
 			let nameA = a.name.toUpperCase(); // ignore upper and lowercase
@@ -228,12 +232,11 @@ class Data {
 			return 0;
 		});
 		$("#output").empty();
-		$("#totals").html("<h2>Path of Building:</h2><h5>(Copy the below lines, 'Create Custom' in PoB under 'Items', "+
-			"and paste it in) </h5>Auramancer<br>Crimson Jewel<br>Limited to: 1<br>"+
-			"Implicits: 0<br>Quality: 20<br>LevelReq: 0<br>");
+		$("#totals").html("");
 
 		let total_active = 0;
-		let seed = 11;//random colors that persist.
+		let total_speed_buff = 0;
+		let grouped_stats = {};
 
 		this.gems.forEach((gem)=>{
 			if(!this.gem_info[gem.name]){
@@ -252,7 +255,7 @@ class Data {
 			//console.log(percent_inc, 'inc:', 1 + (percent_inc/100));
 			let stats = gem.level_stats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100) );
 
-			if(stats.length>0){
+			if(Object.keys(stats).length>0){
 				let cont = $("<div>").addClass('stat_block');
 				let title = $('<div>').addClass('gem_title').text(gem.name);
 				let chk = $("<input>").attr("type", "checkbox");
@@ -283,38 +286,71 @@ class Data {
 				title.append(gen);
 				cont.append(title);
 
-				let rnd = function random() {
-					let x = Math.sin(seed++) * 10000;
-					return x - Math.floor(x);
-				};
-				let cssHSL = "hsl(" + 360 * rnd() + ',' +
-					(25 + 70 * rnd()) + '%,' +
-					(65 + 10 * rnd()) + '%)';
-
-				stats.forEach((txt)=>{
+				Object.keys(stats).forEach((stat)=> {
+					//build local list of this gem's mods.
+					let txt = stat;
+					stats[txt].forEach((num)=>{
+						txt = txt.replace('#', num);
+					});
 					cont.append($("<div>").addClass('gem_mod').text(txt));
-					if(!disabled) {
-						$("#totals").append($('<span>').addClass('total_mod').css('color', cssHSL).html(txt) );
-					}
 				});
 				if(disabled)
 					cont.addClass('disabled_gem');
-				else
+				else {
 					total_active++;
+					total_speed_buff+= 3*( 1 + (percent_inc/100) );
+					Object.keys(stats).forEach((stat)=> {
+						// if not disabled, append this gem's normalized mod objects to the total grouped mods.
+						if(!grouped_stats[stat])
+							grouped_stats[stat] = stats[stat];
+						else
+							stats[stat].forEach((s, idx)=>{
+								grouped_stats[stat][idx]+=s;
+							})
+					});
+				}
 				$("#output").append(cont);
 			}
 		});
+
 		console.log('total buffs:', total_active);
-		let necro_buffs = [
-			Math.round(3*total_active*(1 + (parseInt($('#increase').val())/100) ))+'% increased Attack and Cast Speed',
-			'30% increased Damage',
-			'+20% to all Elemental Resistances'
-		];
-		necro_buffs.forEach((buff)=>{
-			$("#totals").append($('<span>').addClass('total_mod').html(buff) );
+		let necro_buffs = {
+			'#% increased Attack Speed':[Math.floor(total_speed_buff)],
+			'#% increased Cast Speed':[Math.floor(total_speed_buff)],
+			'#% increased Damage':[30],
+			'+#% to Fire Resistance':[20],
+			'+#% to Cold Resistance':[20],
+			'+#% to Lightning Resistance':[20]
+		};
+		Object.keys(necro_buffs).forEach((stat)=> {
+			if(!grouped_stats[stat])
+				grouped_stats[stat] = necro_buffs[stat];
+			else
+				necro_buffs[stat].forEach((s, idx)=>{
+					grouped_stats[stat][idx]+=s;
+				})
+		});
+		console.log(grouped_stats);
+		console.log(this.gem_info);
+
+		let seed = 8;//random colors that persist.
+		let rnd = function random() {
+			let x = Math.sin(seed++) * 10000;
+			return x - Math.floor(x);
+		};
+
+		let output_order = Object.keys(grouped_stats).sort();
+		output_order.forEach((stat)=> {
+			let txt = stat;
+			grouped_stats[txt].forEach((num)=>{
+				txt = txt.replace('#', num);
+			});
+			let cssHSL = "hsl(" + 360 * rnd() + ',' +
+				(25 + 70 * rnd()) + '%,' +
+				(75 + 10 * rnd()) + '%)';
+			$("#totals").append($('<span>').addClass('total_mod').css('color', cssHSL).html(txt) );
 		});
 
-		console.log(this.gem_info);
 		window.location.hash = this.encode_build();
 	}
 

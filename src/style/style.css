@@ -1,5 +1,6 @@
 body{
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #cfcfcf;
 }
 
 .stat_block{
@@ -25,6 +26,17 @@ body{
 }
 
 .gem_title{
+    font-weight: bold;
+}
+
+.totals{
+    background: #444d5d;
+    padding: 3px;
+    max-width: 600px;
+}
+
+.flavor_text{
+    color: #af6025;
     font-weight: bold;
 }
 
