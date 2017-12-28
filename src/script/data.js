@@ -47,6 +47,8 @@ class Gem{
 			return false;
 		if(Gem.match(str, 'deal', 'no', 'damage'))
 			return false;
+		if(Gem.match(str, 'duration'))
+			return false;
 
 		if(Gem.match(str, Gem.spell_or_attack(str), 'added', 'damage')){
 			return 'Adds # to # '+Gem.get_type(str)+' Damage to '+Gem.spell_or_attack(str)+'s';
@@ -62,7 +64,7 @@ class Gem{
 		}
 
 		console.log('Unknown internal stat name:', str);
-		return str;
+		return str+' [#]';
 	}
 
 
