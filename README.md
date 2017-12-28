@@ -7,7 +7,8 @@ This is just a basic, very quickly-written, web-based program to let you see sta
 It supports all aura gem levels, and each gem can be combined with a Generosity support of any level.
 
 The link it generates in the nav bar can be shared, in order to share your stats with others.
-##Credits:
+
+## Credits:
 This program was inspired by [this post](https://www.reddit.com/r/pathofexile/comments/7mfgj6/).
 
 Additionally, the program sources all in-game information from [brather1ng/RePoE](https://github.com/brather1ng/RePoE)
