@@ -1,0 +1,56 @@
+Auramancer
+Uber Flask
+Quality: 20
+LevelReq: 0
+Implicits: 0
+
+# Class stuff
+30% increased Damage
++20% to all Elemental Resistances
+33% increased Attack and Cast Speed
+
+
+# Hatred
+36% of Physical Damage added as Cold Damage
+
+# Anger
+Adds 83 to 138 Fire Damage to Attacks
+Adds 69 to 110 Fire Damage to Spells
+
+# Wrath
+Adds 16 to 248 Lightning Damage to Attacks
+21% more Lightning Damage with Spells
+
+# Haste
+16% increased Attack and Cast Speed
+9% increased Movement Speed
+
+# Purity of Fire
++41% to Fire Resistance
++4% to maximum Fire Resistance
+
+# Purity of Ice
++41% to Cold Resistance
++4% to maximum Cold Resistance
+
+# Purity of Lightning
++41% to Lightning Resistance
++4% to maximum Lightning Resistance
+
+# Purity of Elements
++27% to all Elemental Resistances
+
+# Grace
++2575 to Evasion Rating
+
+# Clarity
+2.9 Mana Regenerated per Second
+
+# Discipline
++217 to maximum Energy Shield
+
+# Determination
+51% more Armour
+
+# Vitality
+1.65% of Life Regenerated per Second
