@@ -271,14 +271,16 @@ class Data {
 				});
 
 				lvl.val(this.gem_info[gem.name]['level']);
+				lvl.prop('min', '1').prop('max', '30');
 				lvl.on('change', ()=>{
-					this.gem_info[gem.name]['level'] = parseInt(lvl.val());
+					this.gem_info[gem.name]['level'] = Math.min(30, Math.max(1, parseInt(lvl.val()) ));
 					this.calculate();
 				});
 
 				gen.val(this.gem_info[gem.name]['generosity']);
+				gen.prop('min', '0').prop('max', '30');
 				gen.on('change', ()=>{
-					this.gem_info[gem.name]['generosity'] = parseInt(gen.val());
+					this.gem_info[gem.name]['generosity'] = Math.min(30, Math.max(0, parseInt(gen.val()) ));
 					this.calculate();
 				});
 				title.append(chk);
@@ -314,6 +316,7 @@ class Data {
 		});
 
 		console.log('total buffs:', total_active);
+		$('#aura_count').text(total_active+' total auras');
 		let necro_buffs = {
 			'#% increased Attack Speed':[Math.floor(total_speed_buff)],
 			'#% increased Cast Speed':[Math.floor(total_speed_buff)],

@@ -14,6 +14,7 @@ body{
 .gen_input{
     width: 30px;
     color: red;
+    background: #f4f4f4;
 }
 
 .lvl_input{
@@ -40,6 +41,16 @@ body{
     font-weight: bold;
 }
 
+.aura_count{
+    color: #444d5d;
+}
+
+
 table{
     width: 100%;
+}
+
+a{
+    font-weight: bold;
+    color: #444d5d;
 }

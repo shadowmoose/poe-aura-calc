@@ -9,8 +9,9 @@
 	<link rel="stylesheet" type="text/css" href="./style/style.css" />
 </head>
 <body>
-	<a href="./">Reload</a><br>
-	<b>% Increased Aura effect: </b><input id="increase" type="number" value="0"/>
+	<a href="../" target="_blank">Info</a> | <a href="./">Clear Page</a><br>
+	<b>Total % Increased Aura effect: </b><input id="increase" type="number" value="0" min="0"
+												 title="Include global increases from all passives and gear."/>
 	<br>
 	<table>
 		<tr>
@@ -18,6 +19,7 @@
 				<div id="output"></div>
 			</td>
 			<td>
+				<h4 id="aura_count" class="aura_count"></h4>
 				<h2>Path of Building:</h2>
 				<h5>(Copy the below lines, 'Create Custom' in PoB under 'Items', and paste it in) </h5>
 
