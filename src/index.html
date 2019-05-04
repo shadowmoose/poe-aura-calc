@@ -10,13 +10,24 @@
 </head>
 <body>
 	<a href="../" target="_blank">Info</a> | <a href="./">Clear Page</a><br>
-	<b>Total % Increased Aura effect: </b>
+	<label>Total % Increased Aura effect:
 	<input id="increase" type="number" value="0" min="0"
 		title="Include global increases from all passives and gear.
 		The tree alone has 69%
 		+15% from Victario's Influence
 		+3% From Conqueror's Potency"/>
+	</label>
 	<br>
+	<label>
+		Ascendancy:
+		<select id="asc_choice">
+			<option value="necromancer" title="Commander of Darkness">Necromancer</option>
+			<option value="guardian" title="Unwavering Faith, Radiant Faith, Bastion of Hope, Radiant Crusade">Guardian</option>
+			<option value="necrian" title="Necromancer + Guardian">Ascendant: Guardian/Necromancer</option>
+		</select>
+		<span id="saved_vals"></span>
+	</label>
+	<hr />
 	<table>
 		<tr>
 			<td class="left_td">
@@ -50,6 +61,9 @@
 	});
 
 	$('#increase').on('change', ()=>{
+		d.calculate();
+	});
+	$("#asc_choice").on('change', () => {
 		d.calculate();
 	});
 </script>

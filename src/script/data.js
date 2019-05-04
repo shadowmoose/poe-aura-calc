@@ -20,11 +20,14 @@ class Gem{
 			let mod_values = stats[i]?stats[i]['values']:null;
 
 			if(mod_text.includes('radius') || mod_text.includes('duration') || !mod_values)continue;
+			if(mod_text.includes('Melee range')) continue;
+			if(mod_text.includes('effect of Aura')) continue;
 
 			mod_text = mod_text.replace(/{.?}/g, '#');
-			mod_text = mod_text.replace(/You and nearby allies .+? /g, '').trim();
+			mod_text = mod_text.replace(/You and nearby .llies .+? /g, '').trim();
+			mod_text = mod_text.replace(/.ura grants/g, '').trim();
 			if(mod_text.includes('per second'))
-				mod_text = 'Regenerate '+mod_text;
+				mod_text = 'Regenerate '+mod_text.replace('regenerated', '');
 			if(!final_vals[mod_text])
 				final_vals[mod_text] = [];
 
@@ -46,6 +49,9 @@ class Data {
 		this.data = {};
 		this.gems = [];
 		this.gem_info = {};
+		this.ascendancy = {};
+		this.saved_prompts = {};
+		this.rendered_prompts = {};
 
 		this.decode_build();
 		this.download();
@@ -53,7 +59,7 @@ class Data {
 
 
 	download(){
-		$.getJSON(this.source_url, function(resp){
+		$.getJSON(this.source_url, (resp) => {
 			this.data = resp;
 
 			Object.keys(this.data).forEach((key)=> {
@@ -61,8 +67,7 @@ class Data {
 				let base_item = ele['static'];
 				if (!base_item['properties'] ||!base_item['properties'][0]||
 					!base_item['properties'][0].includes('Aura') ||
-					base_item['properties'][0].includes('Support') ||
-					base_item['properties'][0].includes('Totem'))
+					base_item['properties'][0].includes('Support'))
 					return;
 				this.gems.push(
 					new Gem(base_item['name'], base_item['description'][0], base_item['stats'], ele['per_level'])
@@ -72,11 +77,72 @@ class Data {
 
 			console.log(this.gems);
 			this.calculate();
-		}.bind(this));
+		});
+	}
+
+	query(msg, force=false){
+		let saved = this.saved_prompts[msg];
+		if(force) saved = null;
+		let pr = saved || parseFloat(prompt('Enter your '+msg+':'));
+		if(!pr){
+			if(this.saved_prompts[msg]) {
+				delete this.saved_prompts[msg];
+			}
+			if(this.rendered_prompts[msg]){
+				this.rendered_prompts[msg].remove();
+				delete this.rendered_prompts[msg];
+			}
+			this.calculate();
+			return
+		}
+		this.saved_prompts[msg] = pr;
+		if(!this.rendered_prompts[msg]) {
+			let an = $('<a>').addClass("input_value").attr('title', 'Click to change value.');
+			an.click(()=>{
+				this.query(msg, true);
+				this.calculate();
+			});
+			console.log('Built:', an);
+			this.rendered_prompts[msg] = an;
+			$("#saved_vals").append(an);
+		}
+		this.rendered_prompts[msg].text(msg+': '+pr);
+		return pr;
+	}
+
+	get_ascendancy(){
+		let sel = $('#asc_choice').val();
+		if(sel === 'necromancer'){
+			return {
+				'#% increased Attack Speed': {scaling: 3},
+				'#% increased Cast Speed': {scaling: 3},
+				'#% increased Damage': {flat: 30},
+				'+#% to all Elemental Resistances': {flat: 20}
+			}
+		}
+		if(sel === 'guardian'){
+			return {
+				'#% Chance to Block Spell Damage': {flat: 10},
+				'#% Chance to Block Attack Damage': {flat: 10},
+				'# additional Energy Shield': {flat: this.query("Reserved Mana")*.15},
+				'+# to Armor': {flat: this.query("Reserved Life")*1.6},
+				'#% increased Damage': {flat: 20},
+				'Regenerate #% Life per second': {scaling: 0.2},
+				'#% Physical Damage Reduction': {scaling: 1}
+			}
+		}
+		if(sel === 'necrian'){
+			return {
+				'#% increased Attack Speed': {scaling: 3},
+				'#% increased Cast Speed': {scaling: 3},
+				'#% Physical Damage Reduction': {scaling: 1}
+			}
+		}
 	}
 
 
 	calculate(){
+		this.ascendancy = this.get_ascendancy();
 		this.gems = this.gems.sort(function(a, b) {
 			let nameA = a.name.toUpperCase();
 			let nameB = b.name.toUpperCase();
@@ -92,7 +158,6 @@ class Data {
 		$("#totals").html("");
 
 		let total_active = 0;
-		let total_speed_buff = 0;
 		let grouped_stats = {};
 
 		this.gems.forEach((gem)=>{
@@ -100,7 +165,7 @@ class Data {
 				console.log('built:', gem.name);
 				this.gem_info[gem.name] = {
 					'level':gem.name === 'Clarity'?1:20,
-					'disabled':gem.name.includes('Vaal'),
+					'disabled':gem.name.includes('Vaal') || gem.name.includes('Totem'),
 					'generosity':0
 				};
 			}
@@ -114,7 +179,7 @@ class Data {
 
 			if(Object.keys(stats).length>0){
 				let cont = $("<div>").addClass('stat_block');
-				let title = $('<div>').addClass('gem_title').text(gem.name).attr('title', gem.description);
+				let title = $('<label>').addClass('gem_title').text(gem.name).attr('title', gem.description);
 				let chk = $("<input>").attr("type", "checkbox");
 				let lvl = $("<input>").attr("type", "number").addClass('lvl_input').attr('title','Gem Level');
 				let gen = $("<input>").attr("type", "number").addClass('gen_input').attr('title','Generosity Level');
@@ -157,7 +222,15 @@ class Data {
 					cont.addClass('disabled_gem');
 				} else {
 					total_active++;
-					total_speed_buff+= 3*( 1 + (percent_inc/100) );
+					Object.keys(this.ascendancy).forEach(name => {
+						let st = this.ascendancy[name];
+						if(st.scaling){
+							st.total = st.total || 0;
+							st.total += st.scaling*( 1 + (percent_inc/100) )
+						}else if(st.flat){
+							st.total = st.flat
+						}
+					});
 					Object.keys(stats).forEach((stat)=> {
 						// if not disabled, add this gem's normalized mod objects to the total grouped mods.
 						if(!grouped_stats[stat])
@@ -174,17 +247,16 @@ class Data {
 
 		console.log('total buffs:', total_active);
 		$('#aura_count').text(total_active+' total auras');
-		let necro_buffs = {
-			'#% increased Attack Speed':[Math.floor(total_speed_buff)],
-			'#% increased Cast Speed':[Math.floor(total_speed_buff)],
-			'#% increased Damage':[30],
-			'+#% to all Elemental Resistances':[20],
-		};
-		Object.keys(necro_buffs).forEach((stat)=> {
+		let asc_buffs = this.ascendancy;
+		Object.keys(asc_buffs).forEach((stat)=> {
+			let val = [Math.floor(asc_buffs[stat].total)];
+			if(asc_buffs[stat].scaling && asc_buffs[stat].scaling < 1)
+				val = [asc_buffs[stat].total];
+			if(!asc_buffs[stat].total) return;
 			if(!grouped_stats[stat])
-				grouped_stats[stat] = necro_buffs[stat];
+				grouped_stats[stat] = val;
 			else
-				necro_buffs[stat].forEach((s, idx)=>{
+				val.forEach((s, idx)=>{
 					grouped_stats[stat][idx]+=s;
 				})
 		});
@@ -214,27 +286,33 @@ class Data {
 
 
 	encode_build(){
-		let out = '1,';// Version 1.
-		out+= $('#increase').val()+',';
-		out+='|';
-		Object.keys(this.gem_info).forEach((idx)=> {
-			let gem = this.gem_info[idx];
-			out+=idx+',';
-			Object.keys(gem).forEach((key)=> {
-				let val = gem[key];
-				if(val === true)
-					val = 't';
-				if(val === false)
-					val = 'f';
-				out+= val+',';
-			});
-			out+='|';
+		let out = JSON.stringify({
+			'version': 2,
+			'gem_info': this.gem_info,
+			'increased_effect': $('#increase').val(),
+			'saved_prompts': this.saved_prompts,
+			'ascendancy': $('#asc_choice').val()
 		});
 		return btoa(out);
 	}
 
 
 	decode_build(){
+		if(window.location.hash){
+			try {
+				let sp = atob(window.location.hash.replace('#', ''));
+				let data = JSON.parse(sp);
+				$('#increase').val(data.increased_effect || 0);
+				$('#asc_choice').val(data.ascendancy || 'necromancer');
+				this.gem_info = data.gem_info;
+				this.saved_prompts = data.saved_prompts;
+			}catch{
+				this.decode_old();
+			}
+		}
+	}
+
+	decode_old(){
 		if(window.location.hash){
 			let sp = atob(window.location.hash.replace('#', '')).split('|');
 			for(let i=0; i<sp.length;i++){
