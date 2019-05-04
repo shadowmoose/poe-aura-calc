@@ -188,7 +188,6 @@ class Data {
 				chk.prop('checked', !disabled);
 				chk.on('change', ()=>{
 					this.gem_info[gem.name]['disabled'] = !chk.prop('checked');
-					console.log(this.gem_info[gem.name]['disabled']);
 					this.calculate();
 				});
 
@@ -242,6 +241,10 @@ class Data {
 					});
 				}
 				$("#output").append(cont);
+			}else{
+				// Missing any visible stats:
+				this.gem_info[gem.name]['disabled'] = true;
+				console.log("Hiding invisible gem:", gem.name);
 			}
 		});
 
@@ -286,9 +289,16 @@ class Data {
 
 
 	encode_build(){
+		let inf = {};
+		Object.keys(this.gem_info).forEach((nfo)=> {
+			let n = this.gem_info[nfo];
+			if(!n.disabled)
+				inf[nfo] = n;
+		});
+		console.log('filtered:', inf);
 		let out = JSON.stringify({
 			'version': 2,
-			'gem_info': this.gem_info,
+			'gem_info': inf,
 			'increased_effect': $('#increase').val(),
 			'saved_prompts': this.saved_prompts,
 			'ascendancy': $('#asc_choice').val()
