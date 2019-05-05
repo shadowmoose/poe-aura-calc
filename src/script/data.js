@@ -254,7 +254,7 @@ class Data {
 		Object.keys(asc_buffs).forEach((stat)=> {
 			let val = [Math.floor(asc_buffs[stat].total)];
 			if(asc_buffs[stat].scaling && asc_buffs[stat].scaling < 1)
-				val = [asc_buffs[stat].total];
+				val = [Math.floor(asc_buffs[stat].total * 100) / 100];
 			if(!asc_buffs[stat].total) return;
 			if(!grouped_stats[stat])
 				grouped_stats[stat] = val;
