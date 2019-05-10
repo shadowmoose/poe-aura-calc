@@ -165,7 +165,7 @@ class Data {
 				console.log('built:', gem.name);
 				this.gem_info[gem.name] = {
 					'level':gem.name === 'Clarity'?1:20,
-					'disabled':gem.name.includes('Vaal') || gem.name.includes('Totem'),
+					'disabled':gem.name.includes('Vaal') || gem.name.includes('Totem') || gem.name.includes('Banner'),
 					'generosity':0
 				};
 			}
