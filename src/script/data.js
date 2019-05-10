@@ -303,21 +303,25 @@ class Data {
 			'saved_prompts': this.saved_prompts,
 			'ascendancy': $('#asc_choice').val()
 		});
-		return btoa(out);
+		return this.compress(out);
 	}
 
 
 	decode_build(){
-		if(window.location.hash){
+		if(window.location.hash && window.location.hash.replace('#', '')){
 			try {
-				let sp = atob(window.location.hash.replace('#', ''));
+				let sp = this.decompress(window.location.hash.replace('#', ''));
 				let data = JSON.parse(sp);
 				$('#increase').val(data.increased_effect || 0);
 				$('#asc_choice').val(data.ascendancy || 'necromancer');
 				this.gem_info = data.gem_info;
 				this.saved_prompts = data.saved_prompts;
 			}catch{
-				this.decode_old();
+				try{
+					this.decode_old();
+				}catch{
+					alert('Unable to decode built - please "Clear Page".');
+				}
 			}
 		}
 	}
@@ -348,5 +352,15 @@ class Data {
 				this.gem_info[name] = obj;
 			}
 		}
+	}
+
+	compress(string){
+		let comp =  LZString.compressToEncodedURIComponent(string);
+		console.log("Compressed from:", string.length, "to:", comp.length, 'output bytes.');
+		return comp;
+	}
+
+	decompress(compressed){
+		return LZString.decompressFromEncodedURIComponent(compressed);
 	}
 }
