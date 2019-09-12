@@ -67,7 +67,8 @@ class Data {
 				let base_item = ele['static'];
 				if (!base_item['properties'] ||!base_item['properties'][0]||
 					!base_item['properties'][0].includes('Aura') ||
-					base_item['properties'][0].includes('Support') || base_item['name'].includes(' Mine'))
+					base_item['properties'][0].includes('Support') || base_item['name'].includes(' Mine') ||
+					base_item['name'].includes('Blood and'))
 					return;
 				this.gems.push(
 					new Gem(base_item['name'], base_item['description'][0], base_item['stats'], ele['per_level'])
@@ -133,9 +134,10 @@ class Data {
 		}
 		if(sel === 'necrian'){
 			return {
-				'#% increased Attack Speed': {scaling: 3},
-				'#% increased Cast Speed': {scaling: 3},
-				'#% Physical Damage Reduction': {scaling: 1}
+				'#% increased Attack Speed': {scaling: 2},
+				'#% increased Cast Speed': {scaling: 2},
+				'#% Physical Damage Reduction': {scaling: 1},
+				'#% increased Damage': {flat: 30}
 			}
 		}
 	}
