@@ -68,7 +68,7 @@ class Data {
 				if (!base_item['properties'] ||!base_item['properties'][0]||
 					!base_item['properties'][0].includes('Aura') ||
 					base_item['properties'][0].includes('Support') || base_item['name'].includes(' Mine') ||
-					base_item['name'].includes('Blood and'))
+					base_item['name'].includes('Flesh and'))
 					return;
 				this.gems.push(
 					new Gem(base_item['name'], base_item['description'][0], base_item['stats'], ele['per_level'])
