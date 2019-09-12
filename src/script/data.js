@@ -67,7 +67,7 @@ class Data {
 				let base_item = ele['static'];
 				if (!base_item['properties'] ||!base_item['properties'][0]||
 					!base_item['properties'][0].includes('Aura') ||
-					base_item['properties'][0].includes('Support'))
+					base_item['properties'][0].includes('Support') || base_item['name'].includes(' Mine'))
 					return;
 				this.gems.push(
 					new Gem(base_item['name'], base_item['description'][0], base_item['stats'], ele['per_level'])
@@ -165,7 +165,7 @@ class Data {
 				console.log('built:', gem.name);
 				this.gem_info[gem.name] = {
 					'level':gem.name === 'Clarity'?1:20,
-					'disabled':gem.name.includes('Vaal') || gem.name.includes('Totem') || gem.name.includes('Banner'),
+					'disabled':true,
 					'generosity':0
 				};
 			}
