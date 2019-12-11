@@ -45,7 +45,7 @@ class Gem{
 
 class Data {
 	constructor() {
-		this.source_url = 'https://raw.githubusercontent.com/brather1ng/RePoE/master/data/gem_tooltips.min.json';
+		this.source_url = 'https://raw.githubusercontent.com/brather1ng/RePoE/master/RePoE/data/gem_tooltips.min.json';
 		this.data = {};
 		this.gems = [];
 		this.gem_info = {};
