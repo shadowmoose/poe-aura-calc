@@ -1,6 +1,6 @@
 # Quick-and-Dirty Aura effect calc for Auramancers.
 
-[Go here to see it in action](https://shadowmoose.github.io/poe-aura-calc/src/)
+[Go here to see it in action](https://aura.poe.farm)
 
 This is just a basic, very quickly-written, web-based program to let you see stats your aurabot 
 will give to your build.
