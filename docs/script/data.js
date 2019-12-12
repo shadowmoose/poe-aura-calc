@@ -123,13 +123,16 @@ class Data {
 		}
 		if(sel === 'guardian'){
 			return {
-				'#% Chance to Block Spell Damage': {flat: 10},
-				'#% Chance to Block Attack Damage': {flat: 10},
 				'# additional Energy Shield': {flat: this.query("Reserved Mana")*.15},
-				'+# to Armor': {flat: this.query("Reserved Life")*1.6},
-				'#% increased Damage': {flat: 20},
-				'Regenerate #% Life per second': {scaling: 0.2},
-				'#% Physical Damage Reduction': {scaling: 1}
+				'+# to Armour': {flat: this.query("Reserved Life")*1.6},
+				'#% increased Damage': {flat: 30},
+				'#% more Damage': {flat: 10},
+				'#% increased Area of Effect': {flat: 30},
+				'#% increased Attack Speed': {flat: 15},
+				'#% increased Cast Speed': {flat: 15},
+				'#% increased Movement Speed': {flat: 15},
+				'Regenerate #% of Life per second': {scaling: 0.2},
+				'+#% Physical Damage Reduction': {scaling: 1}
 			}
 		}
 		if(sel === 'necrian'){
@@ -137,7 +140,11 @@ class Data {
 				'#% increased Attack Speed': {scaling: 2},
 				'#% increased Cast Speed': {scaling: 2},
 				'#% Physical Damage Reduction': {scaling: 1},
-				'#% increased Damage': {flat: 30}
+			}
+		}
+		if (sel === 'champion'){
+			return {
+				'#% increased Movement Speed': {flat: 12},
 			}
 		}
 	}
