@@ -26,8 +26,12 @@ class Gem{
 			mod_text = mod_text.replace(/{.?}/g, '#');
 			mod_text = mod_text.replace(/You and nearby .llies .+? /g, '').trim();
 			mod_text = mod_text.replace(/.ura grants/g, '').trim();
-			if(mod_text.includes('per second'))
+			if(mod_text.includes('of Life per second'))
 				mod_text = 'Regenerate '+mod_text.replace('regenerated', '');
+			if(mod_text.includes('Mana per second'))
+				mod_text = 'Regenerate '+mod_text.replace('regenerated', '');
+			if(mod_text.includes('less Area Damage'))
+				mod_text = "";
 			if(!final_vals[mod_text])
 				final_vals[mod_text] = [];
 
