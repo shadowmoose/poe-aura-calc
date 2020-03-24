@@ -122,7 +122,7 @@ class Data {
 				'#% increased Attack Speed': {scaling: 3},
 				'#% increased Cast Speed': {scaling: 3},
 				'#% increased Damage': {flat: 30},
-				'+#% to all Elemental Resistances': {flat: 20}
+				'+#% to all Elemental Resistances': {flat: 30}
 			}
 		}
 		if(sel === 'guardian'){
@@ -194,7 +194,6 @@ class Data {
 
 			let stats = gem.level_stats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100) );
 			
-			
 			if(Object.keys(stats).length>0){
 				let cont = $("<div>").addClass('stat_block');
 				let title = $('<label>').addClass('gem_title').text(gem.name).attr('title', gem.description);
@@ -253,7 +252,7 @@ class Data {
 						let st = this.ascendancy[name];
 						if(st.scaling){
 							st.total = st.total || 0;
-							st.total += st.scaling*( 1 + ((percent_inc)/100) )
+							st.total += st.scaling*( 1 + (percent_inc/100) )
 						}else if(st.flat){
 							st.total = st.flat
 						}
