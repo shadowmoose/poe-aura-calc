@@ -22,6 +22,11 @@ body{
     color: blue;
 }
 
+.effect_input{
+	width: 40px;
+    color: green;
+}
+
 .disabled_gem{
     color: #919191 !important;
 }
