@@ -30,7 +30,7 @@ class Gem{
 				mod_text = 'Regenerate '+mod_text.replace('regenerated', '');
 			if(mod_text.includes('Mana per second'))
 				mod_text = 'Regenerate '+mod_text.replace('regenerated', '');
-			if(mod_text.includes('less Area Damage'))
+			if(mod_text.includes('less Area Damage') || mod_text.includes('Melee Strike Range'))
 				mod_text = "";
 			if(!final_vals[mod_text])
 				final_vals[mod_text] = [];
@@ -127,7 +127,7 @@ class Data {
 		}
 		if(sel === 'guardian'){
 			return {
-				'# additional Energy Shield': {flat: this.query("Reserved Mana")*.15},
+				'# additional Energy Shield': {flat: this.query("Reserved Mana")*.10},
 				'+# to Armour': {flat: this.query("Reserved Life")*1.6},
 				'#% increased Damage': {flat: 30},
 				'#% more Damage': {flat: 10},
@@ -179,23 +179,29 @@ class Data {
 				this.gem_info[gem.name] = {
 					'level':gem.name === 'Clarity'?1:20,
 					'disabled':true,
-					'generosity':0
+					'generosity':0,
+					'effect':0
 				};
 			}
 
 			let percent_inc = parseInt($('#increase').val());
-
+			
+			if(this.gem_info[gem.name]['effect']>0)
+				percent_inc+= parseInt(this.gem_info[gem.name]['effect']);
+			
 			if(this.gem_info[gem.name]['generosity']>0)
 				percent_inc+= 19+parseInt(this.gem_info[gem.name]['generosity']);
 
 			let stats = gem.level_stats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100) );
-
+			
+			
 			if(Object.keys(stats).length>0){
 				let cont = $("<div>").addClass('stat_block');
 				let title = $('<label>').addClass('gem_title').text(gem.name).attr('title', gem.description);
 				let chk = $("<input>").attr("type", "checkbox");
 				let lvl = $("<input>").attr("type", "number").addClass('lvl_input').attr('title','Gem Level');
 				let gen = $("<input>").attr("type", "number").addClass('gen_input').attr('title','Generosity Level');
+				let eff = $("<input>").attr("type", "number").addClass('effect_input').attr('title','Specific Aura Effect');
 				let disabled = this.gem_info[gem.name]['disabled'];
 
 				chk.prop('checked', !disabled);
@@ -217,9 +223,18 @@ class Data {
 					this.gem_info[gem.name]['generosity'] = Math.min(30, Math.max(0, parseInt(gen.val()) ));
 					this.calculate();
 				});
+				
+				eff.val(this.gem_info[gem.name]['effect']);
+				eff.prop('min', '0').prop('max', '600');
+				eff.on('change', ()=>{
+					this.gem_info[gem.name]['effect'] = Math.min(600, Math.max(0, parseInt(eff.val()) ));
+					this.calculate();
+				});
+				
 				title.append(chk);
 				title.append(lvl);
 				title.append(gen);
+				title.append(eff);
 				cont.append(title);
 
 				Object.keys(stats).forEach((stat)=> {
@@ -238,7 +253,7 @@ class Data {
 						let st = this.ascendancy[name];
 						if(st.scaling){
 							st.total = st.total || 0;
-							st.total += st.scaling*( 1 + (percent_inc/100) )
+							st.total += st.scaling*( 1 + ((percent_inc)/100) )
 						}else if(st.flat){
 							st.total = st.flat
 						}
@@ -351,7 +366,7 @@ class Data {
 					$('#increase').val(parseInt(gr[1]));
 					continue;
 				}
-				let fields = ['level', 'disabled', 'generosity'];
+				let fields = ['level', 'disabled', 'generosity', 'effect'];
 				let name = gr[0];
 				let obj = {};
 				for(let x = 0; x<fields.length;x++) {
