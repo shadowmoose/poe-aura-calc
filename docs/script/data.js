@@ -159,7 +159,7 @@ class Data {
 		if(sel)
 			return {
 				'#% increased Critical Strike Chance': {flat: 50},
-				'#% Global Critical Strike Multiplier': {flat: 15}
+				'+#% to Global Critical Strike Multiplier': {flat: 15}
 			}
 	}
 	get_replenish(){
