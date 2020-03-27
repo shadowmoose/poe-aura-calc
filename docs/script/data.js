@@ -8,7 +8,7 @@ class Gem{
 
 
 	/** Returns an array of formatted text lines, showing this aura's effects at the given level. */
-	level_stats(level, effect_increase){
+	level_stats(level, effect_increase, buff_eff){
 		let lvl = ""+level;//Math.max(1, Math.min(this.level_array.length, level));
 		console.log(this.name, '  level: ', lvl);
 		let stats = this.level_array[lvl]['stats'];
@@ -36,7 +36,7 @@ class Gem{
 				final_vals[mod_text] = [];
 
 			for(let idx = 0; idx<mod_values.length; idx++) {
-				let rounded = (Math.floor( mod_values[idx] * effect_increase * 100 ) / 100);
+				let rounded = (Math.floor( mod_values[idx] * effect_increase * buff_eff * 100 ) / 100);
 				if(!mod_text.includes('Regenerate'))rounded =  Math.floor(rounded);
 				final_vals[mod_text].push(rounded);
 			}
@@ -56,7 +56,8 @@ class Data {
 		this.ascendancy = {};
 		this.saved_prompts = {};
 		this.rendered_prompts = {};
-
+		this.precise = {};
+		this.replenish = {};
 		this.decode_build();
 		this.download();
 	}
@@ -152,10 +153,28 @@ class Data {
 			}
 		}
 	}
+	
+	get_precise(){
+		let sel = $('#preciseCommander').prop( "checked" );
+		if(sel)
+			return {
+				'#% increased Critical Strike Chance': {flat: 50},
+				'#% Global Critical Strike Multiplier': {flat: 15}
+			}
+	}
+	get_replenish(){
+		let sel = $('#replenishingPresence').prop( "checked" );
+		if (sel)
+			return {
+				'Regenerate #% of Life per second': {scaling: 0.2},
+			}
+	}
 
 
 	calculate(){
 		this.ascendancy = this.get_ascendancy();
+		this.precise = this.get_precise();
+		this.replenish = this.get_replenish();
 		this.gems = this.gems.sort(function(a, b) {
 			let nameA = a.name.toUpperCase();
 			let nameB = b.name.toUpperCase();
@@ -183,8 +202,9 @@ class Data {
 					'effect':0
 				};
 			}
-
+			
 			let percent_inc = parseInt($('#increase').val());
+			let buff_effect = parseInt($('#buffEffect').val());
 			
 			if(this.gem_info[gem.name]['effect']>0)
 				percent_inc+= parseInt(this.gem_info[gem.name]['effect']);
@@ -192,7 +212,8 @@ class Data {
 			if(this.gem_info[gem.name]['generosity']>0)
 				percent_inc+= 19+parseInt(this.gem_info[gem.name]['generosity']);
 
-			let stats = gem.level_stats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100) );
+			let stats = gem.level_stats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100), 1 + (buff_effect/100) );
+			
 			
 			if(Object.keys(stats).length>0){
 				let cont = $("<div>").addClass('stat_block');
@@ -252,11 +273,30 @@ class Data {
 						let st = this.ascendancy[name];
 						if(st.scaling){
 							st.total = st.total || 0;
-							st.total += st.scaling*( 1 + (percent_inc/100) )
+							if(st.scaling < 1)
+								st.total += (Math.floor(st.scaling * ( 1 + (percent_inc/100)) * 10) / 10)
+							else 
+								st.total += Math.floor(st.scaling * ( 1 + (percent_inc/100)))
 						}else if(st.flat){
 							st.total = st.flat
 						}
 					});
+					
+					if($('#replenishingPresence').prop( "checked" )){
+						Object.keys(this.replenish).forEach(name => {
+							let st = this.replenish[name];
+							st.total = st.total || 0;
+							st.total += (Math.floor(st.scaling * ( 1 + (percent_inc/100)) * 10) / 10);
+						});
+					}
+					
+					if($('#preciseCommander').prop( "checked" )){
+						Object.keys(this.precise).forEach(name => {
+							let st = this.precise[name];
+							st.total = st.flat
+						});
+					}
+					
 					Object.keys(stats).forEach((stat)=> {
 						// if not disabled, add this gem's normalized mod objects to the total grouped mods.
 						if(!grouped_stats[stat])
@@ -280,8 +320,8 @@ class Data {
 		let asc_buffs = this.ascendancy;
 		Object.keys(asc_buffs).forEach((stat)=> {
 			let val = [Math.floor(asc_buffs[stat].total)];
-			if(asc_buffs[stat].scaling && asc_buffs[stat].scaling < 1)
-				val = [Math.floor(asc_buffs[stat].total * 100) / 100];
+			if(asc_buffs[stat].scaling)
+				val = [Math.floor(asc_buffs[stat].total * 100 * (1+((parseInt($('#buffEffect').val()))/100))) / 100];
 			if(!asc_buffs[stat].total) return;
 			if(!grouped_stats[stat])
 				grouped_stats[stat] = val;
@@ -290,6 +330,37 @@ class Data {
 					grouped_stats[stat][idx]+=s;
 				})
 		});
+		
+		if($('#preciseCommander').prop( "checked" )){
+			let jewel_buffs = this.precise;
+			Object.keys(jewel_buffs).forEach((stat)=> {
+				let val = [Math.floor(jewel_buffs[stat].total)];
+				if(!jewel_buffs[stat].total) return;
+				if(!grouped_stats[stat])
+					grouped_stats[stat] = val;
+				else
+					val.forEach((s, idx)=>{
+						grouped_stats[stat][idx]+=s;
+					})
+			});
+		}
+		
+		if($('#replenishingPresence').prop( "checked" )){
+			let jewel_buffs = this.replenish;
+			Object.keys(jewel_buffs).forEach((stat)=> {
+				let val = [Math.floor(jewel_buffs[stat].total)];
+				if(jewel_buffs[stat].scaling)
+					val = [Math.floor(jewel_buffs[stat].total * 100 * (1+((parseInt($('#buffEffect').val()))/100))) / 100];
+				if(!jewel_buffs[stat].total) return;
+				if(!grouped_stats[stat])
+					grouped_stats[stat] = val;
+				else
+					val.forEach((s, idx)=>{
+						grouped_stats[stat][idx]+=s;
+					})
+			});
+		}
+		
 		console.log(grouped_stats);
 		console.log(this.gem_info);
 
@@ -327,6 +398,9 @@ class Data {
 			'version': 2,
 			'gem_info': inf,
 			'increased_effect': $('#increase').val(),
+			'preciseCommand': $('#preciseCommander').prop( "checked" ),
+			'replenishing': $('#replenishingPresence').prop( "checked" ),
+			'buff_effect': $('#buffEffect').val(),
 			'saved_prompts': this.saved_prompts,
 			'ascendancy': $('#asc_choice').val()
 		});
@@ -340,6 +414,9 @@ class Data {
 				let sp = this.decompress(window.location.hash.replace('#', ''));
 				let data = JSON.parse(sp);
 				$('#increase').val(data.increased_effect || 0);
+				$('#buffEffect').val(data.buff_effect || 0);
+				$('#preciseCommander').prop( "checked", data.preciseCommand || false);
+				$('#replenishingPresence').prop( "checked", data.replenishing || false);
 				$('#asc_choice').val(data.ascendancy || 'necromancer');
 				this.gem_info = data.gem_info;
 				this.saved_prompts = data.saved_prompts;
