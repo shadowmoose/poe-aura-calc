@@ -1,46 +1,99 @@
+let translations = [];
+
+const ignoredMods = [
+	'base_skill_effect_duration',
+	'skill_physical_damage_%_to_convert_to_lightning',
+	'melee_range_+',
+	'active_skill_area_damage_+%_final',
+	'base_radius',
+	'modifiers_to_',
+	'no_mana_cost',
+	'aura_effect_',
+	'base_cooldown_speed'
+];
+
+const ignoredGems = [
+	'Summon Skitterbots'
+];
+
+const knownTranslations = {
+	'puresteel_banner_accuracy_rating_+%_final': 'Nearby Enemies have {0}% more Accuracy Rating'
+};
+
+const removeModParts = [
+	/Aura grants /,
+	/You and nearby Allies [^R]\w+\s/i, // Clean all non-Regen.
+	/You and nearby Allies /, // All "Regen" auras.
+	[/Enemies maimed by this skill/i, 'Nearby Enemies']
+];
+
+function translate(id) {
+	try{
+		return knownTranslations[id] || translations.find(trn => trn.ids.includes(id)).English[0].string;
+	} catch (err) {
+		console.warn(`Failed ID lookup: ${id}`);
+		return null;
+	}
+}
+
 class Gem{
-	constructor(name, description, mods, level_array){
+	constructor(name, description, stats, level_array){
 		this.name = name;
 		this.description = description;
-		this.mods = mods;
+		this.stats = stats;
 		this.level_array = level_array;
 	}
 
+	findNumbers(str) {
+		return (str.match(/{[0-9]+}/gm) || []).length;
+	}
 
-	/** Returns an array of formatted text lines, showing this aura's effects at the given level. */
-	level_stats(level, effect_increase, buff_eff){
-		let lvl = ""+level;//Math.max(1, Math.min(this.level_array.length, level));
-		console.log(this.name, '  level: ', lvl);
-		let stats = this.level_array[lvl]['stats'];
+	/** Returns an object, where each key is a generic stat line, and the value is the array of numbers to be inserted. */
+	levelStats(lvl, effect_increase, buff_eff){
+		console.log(this.name, 'level:', lvl);
+		let stats = this.level_array[lvl]['stats'].filter(o=>!!o).map(o => o.value);
 
+		// For each stat, if it has numbers in the string, { pop } them from the number array and concat them.
 		let final_vals = {};
+		const seen = new Set();
 
-		for(let i=0; i < stats.length; i++){
-			let mod_text = this.mods[i]['text'];
-			let mod_values = stats[i]?stats[i]['values']:null;
+		for (const mod of this.stats) {
+			if (mod.id.includes('deal_no_damage')) continue;
+			let modText = translate(mod.id) || '';
+			if (seen.has(modText)) continue;
+			seen.add(modText);
+			const cnt = this.findNumbers(modText);
+			const vals = [];
 
-			if(mod_text.includes('radius') || mod_text.includes('duration') || !mod_values)continue;
-			if(mod_text.includes('Melee range')) continue;
-			if(mod_text.includes('effect of Aura')) continue;
+			for (let i=0; i<cnt; i++) {
+				let val = mod.value !== undefined ? mod.value : stats.shift();
 
-			mod_text = mod_text.replace(/{.?}/g, '#');
-			mod_text = mod_text.replace(/You and nearby .llies .+? /g, '').trim();
-			mod_text = mod_text.replace(/.ura grants/g, '').trim();
-			if(mod_text.includes('of Life per second'))
-				mod_text = 'Regenerate '+mod_text.replace('regenerated', '');
-			if(mod_text.includes('Mana per second'))
-				mod_text = 'Regenerate '+mod_text.replace('regenerated', '');
-			if(mod_text.includes('less Area Damage') || mod_text.includes('Melee Strike Range'))
-				mod_text = "";
-			if(!final_vals[mod_text])
-				final_vals[mod_text] = [];
+				if (mod.value === 0) {
+					modText = '';
+					continue;
+				}
 
-			for(let idx = 0; idx<mod_values.length; idx++) {
-				let rounded = (Math.floor( mod_values[idx] * effect_increase * buff_eff * 100 ) / 100);
-				if(!mod_text.includes('Regenerate'))rounded =  Math.floor(rounded);
-				final_vals[mod_text].push(rounded);
+				if (val !== null && val !== undefined) {
+					if (mod.id.includes('per_minute')) val = Math.floor(val/60);
+					val = Math.floor( val * effect_increase * buff_eff * 100 ) / 100;
+				}
+				val = Math.floor(val || 0);
+				modText = modText.replace(/{[0-9]+}/, '#');
+				vals.push(val);
+			}
+
+			if (ignoredMods.some(ig => mod.id.includes(ig))) continue;
+			if (modText) {
+				removeModParts.forEach(rmg => {
+					let rm = Array.isArray(rmg) ? rmg[0] : rmg;
+					let rp = Array.isArray(rmg) ? rmg[1] : '';
+					modText = modText.replace(rm, rp).trim()
+				});
+				if (modText.includes('Elemental Resi') || modText.includes('to Accuracy')) modText = `+${modText}`;
+				final_vals[modText] = vals;
 			}
 		}
+
 		return final_vals;
 	}
 }
@@ -49,7 +102,8 @@ class Gem{
 
 class Data {
 	constructor() {
-		this.source_url = 'https://raw.githubusercontent.com/brather1ng/RePoE/master/RePoE/data/gem_tooltips.min.json';
+		this.source_url = 'https://raw.githubusercontent.com/brather1ng/RePoE/master/RePoE/data/gems.min.json';
+		this.translation_url = 'https://raw.githubusercontent.com/brather1ng/RePoE/master/RePoE/data/stat_translations/aura_skill.min.json';
 		this.data = {};
 		this.gems = [];
 		this.gem_info = {};
@@ -63,22 +117,33 @@ class Data {
 	}
 
 
-	download(){
+	async download(){
+		translations = await fetch(this.translation_url).then(res=>res.json());
+
 		$.getJSON(this.source_url, (resp) => {
 			this.data = resp;
 
+			console.log('Gem data:', this.data);
+
 			Object.keys(this.data).forEach((key)=> {
-				let ele = this.data[key];
-				let base_item = ele['static'];
-				if (!base_item['properties'] ||!base_item['properties'][0]||
-					!base_item['properties'][0].includes('Aura') ||
-					base_item['properties'][0].includes('Support') || base_item['name'].includes(' Mine') ||
-					base_item['name'].includes('Flesh and'))
-					return;
+				let base = this.data[key];
+				let ele = base['active_skill'];
+				if (!ele) return;
+
+				const name = ele['display_name'];
+				if (!name
+					|| ignoredGems.includes(name)
+					|| !ele['types'].includes('aura')
+					|| ['totem', 'mine'].some(ig => ele['types'].includes(ig))
+					|| base.is_support
+					|| !base.base_item
+					|| !base.static.stats
+				) return;
+
 				this.gems.push(
-					new Gem(base_item['name'], base_item['description'][0], base_item['stats'], ele['per_level'])
+					new Gem(name, ele['description'], base.static.stats, this.data[key]['per_level'])
 				);
-				console.log(base_item['name']);
+				console.log(name, base);
 			});
 
 			console.log(this.gems);
@@ -149,7 +214,7 @@ class Data {
 		}
 		if (sel === 'champion'){
 			return {
-				'#% increased Movement Speed': {flat: 12},
+				' #% increased Movement Speed': {flat: 12},
 			}
 		}
 	}
@@ -194,7 +259,6 @@ class Data {
 
 		this.gems.forEach((gem)=>{
 			if(!this.gem_info[gem.name]){
-				console.log('built:', gem.name);
 				this.gem_info[gem.name] = {
 					'level':gem.name === 'Clarity'?1:20,
 					'disabled':true,
@@ -212,9 +276,8 @@ class Data {
 			if(this.gem_info[gem.name]['generosity']>0)
 				percent_inc+= 19+parseInt(this.gem_info[gem.name]['generosity']);
 
-			let stats = gem.level_stats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100), 1 + (buff_effect/100) );
-			
-			
+			let stats = gem.levelStats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100), 1 + (buff_effect/100) );
+
 			if(Object.keys(stats).length>0){
 				let cont = $("<div>").addClass('stat_block');
 				let title = $('<label>').addClass('gem_title').text(gem.name).attr('title', gem.description);
@@ -243,14 +306,14 @@ class Data {
 					this.gem_info[gem.name]['generosity'] = Math.min(30, Math.max(0, parseInt(gen.val()) ));
 					this.calculate();
 				});
-				
+
 				eff.val(this.gem_info[gem.name]['effect']);
 				eff.prop('min', '0').prop('max', '600');
 				eff.on('change', ()=>{
 					this.gem_info[gem.name]['effect'] = Math.min(600, Math.max(0, parseInt(eff.val()) ));
 					this.calculate();
 				});
-				
+
 				title.append(chk);
 				title.append(lvl);
 				title.append(gen);
@@ -275,13 +338,13 @@ class Data {
 							st.total = st.total || 0;
 							if(st.scaling < 1)
 								st.total += (Math.floor(st.scaling * ( 1 + (percent_inc/100)) * 10) / 10)
-							else 
+							else
 								st.total += Math.floor(st.scaling * ( 1 + (percent_inc/100)))
 						}else if(st.flat){
 							st.total = st.flat
 						}
 					});
-					
+
 					if($('#replenishingPresence').prop( "checked" )){
 						Object.keys(this.replenish).forEach(name => {
 							let st = this.replenish[name];
@@ -289,22 +352,23 @@ class Data {
 							st.total += (Math.floor(st.scaling * ( 1 + (percent_inc/100)) * 10) / 10);
 						});
 					}
-					
+
 					if($('#preciseCommander').prop( "checked" )){
 						Object.keys(this.precise).forEach(name => {
 							let st = this.precise[name];
 							st.total = st.flat
 						});
 					}
-					
+
 					Object.keys(stats).forEach((stat)=> {
 						// if not disabled, add this gem's normalized mod objects to the total grouped mods.
-						if(!grouped_stats[stat])
+						if(!grouped_stats[stat]) {
 							grouped_stats[stat] = stats[stat];
-						else
-							stats[stat].forEach((s, idx)=>{
-								grouped_stats[stat][idx]+=s;
+						} else {
+							stats[stat].forEach((s, idx) => {
+								grouped_stats[stat][idx] += s;
 							})
+						}
 					});
 				}
 				$("#output").append(cont);
@@ -360,9 +424,6 @@ class Data {
 					})
 			});
 		}
-		
-		console.log(grouped_stats);
-		console.log(this.gem_info);
 
 		let seed = 8;//random colors that persist.
 		let rnd = function random() {
@@ -379,7 +440,7 @@ class Data {
 			let cssHSL = "hsl(" + 360 * rnd() + ',' +
 				(25 + 70 * rnd()) + '%,' +
 				(75 + 10 * rnd()) + '%)';
-			$("#totals").append($('<span>').addClass('total_mod').css('color', cssHSL).html(txt) );
+			$("#totals").append($('<span>').addClass('total_mod').css('color', cssHSL).text(txt) );
 		});
 
 		window.location.hash = this.encode_build();
@@ -393,7 +454,7 @@ class Data {
 			if(!n.disabled)
 				inf[nfo] = n;
 		});
-		console.log('filtered:', inf);
+
 		let out = JSON.stringify({
 			'version': 2,
 			'gem_info': inf,
