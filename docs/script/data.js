@@ -16,6 +16,7 @@ const ignoredMods = [
 const ignoredGems = [
 	'Summon Skitterbots',
 	'Blinding Aura',
+	'Death Aura'
 ];
 
 const knownTranslations = {
