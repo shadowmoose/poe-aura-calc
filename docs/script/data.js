@@ -9,11 +9,13 @@ const ignoredMods = [
 	'modifiers_to_',
 	'no_mana_cost',
 	'aura_effect_',
-	'base_cooldown_speed'
+	'base_cooldown_speed',
+	'attack_damage_taken_+%_final_from_enemies_unaffected_by_sand_armour'
 ];
 
 const ignoredGems = [
-	'Summon Skitterbots'
+	'Summon Skitterbots',
+	'Blinding Aura',
 ];
 
 const knownTranslations = {
@@ -24,7 +26,7 @@ const removeModParts = [
 	/Aura grants /,
 	/You and nearby Allies [^R]\w+\s/i, // Clean all non-Regen.
 	/You and nearby Allies /, // All "Regen" auras.
-	[/Enemies maimed by this skill/i, 'Nearby Enemies']
+	[/Enemies maimed by this skill/i, 'Nearby Enemies']  // Replace values.
 ];
 
 function translate(id) {
@@ -36,7 +38,7 @@ function translate(id) {
 	}
 }
 
-class Gem{
+class Gem {
 	constructor(name, description, stats, level_array){
 		this.name = name;
 		this.description = description;
@@ -50,8 +52,15 @@ class Gem{
 
 	/** Returns an object, where each key is a generic stat line, and the value is the array of numbers to be inserted. */
 	levelStats(lvl, effect_increase, buff_eff){
-		console.log(this.name, 'level:', lvl);
-		let stats = this.level_array[lvl]['stats'].filter(o=>!!o).map(o => o.value);
+		console.log(this.name, 'level:', lvl)
+		if (!this.level_array[lvl]) {
+			lvl = Object.keys(this.level_array).reduce((acc, curr) => {
+				if (Math.abs(lvl - curr) < Math.abs(lvl - acc)) return curr;
+				return acc;
+			}, 1000);
+			lvl = parseInt(lvl);
+		}
+		let stats = (this.level_array[lvl]['stats']||[]).filter(o=>!!o).map(o => o.value);
 
 		// For each stat, if it has numbers in the string, { pop } them from the number array and concat them.
 		let final_vals = {};
@@ -198,9 +207,12 @@ class Data {
 				'#% increased Damage': {flat: 30},
 				'#% more Damage': {flat: 10},
 				'#% increased Area of Effect': {flat: 30},
-				'#% increased Attack Speed': {flat: 15},
-				'#% increased Cast Speed': {flat: 15},
-				'#% increased Movement Speed': {flat: 15},
+				'#% increased Attack Speed': {flat: 20},
+				'#% increased Cast Speed': {flat: 20},
+				'#% increased Movement Speed': {flat: 20},
+				'Onslaught': {flat: 1},
+				'Intimidate Enemies for 4 seconds on Hit': {flat: 1},
+				'Unnerve Enemies for 4 seconds on Hit': {flat: 1},
 				'Regenerate #% of Life per second': {scaling: 0.2},
 				'+#% Physical Damage Reduction': {scaling: 1}
 			}
@@ -210,6 +222,7 @@ class Data {
 				'#% increased Attack Speed': {scaling: 2},
 				'#% increased Cast Speed': {scaling: 2},
 				'#% Physical Damage Reduction': {scaling: 1},
+				'Onslaught': {flat: 1},
 			}
 		}
 		if (sel === 'champion'){

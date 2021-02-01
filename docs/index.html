@@ -57,15 +57,15 @@
 				<h4 id="aura_count" class="aura_count"></h4>
 				<h2>Path of Building:</h2>
 				<h5>(Copy the below lines, 'Create Custom' in PoB under 'Items', and paste it in) </h5>
+				<label for="toggle_type" title="Some classes scale flask effect, so you may use a Jewel instead.">
+					Use Jewel
+				</label><input type="checkbox" id="toggle_type">
 
 				<div class="totals">
 					<span class="flavor_text">
 						Aura Bot<br>
-						Aquamarine Flask<br>
-						Quality: 20<br>
-						LevelReq: 0<br>
-						Implicits: 1<br>
-						Is Awesome<br>
+						<span id="type_flask">Aquamarine Flask<br></span>
+						<span id="type_jewel" style="display: none">Cobalt Jewel<br></span>
 					</span>
 					<div id="totals"></div>
 				</div>
@@ -94,6 +94,11 @@
 	});
 	$("#asc_choice").on('change', () => {
 		d.calculate();
+	});
+
+	$("#toggle_type").on('change', () => {
+		$('#type_flask').toggle();
+		$('#type_jewel').toggle();
 	});
 </script>
 
