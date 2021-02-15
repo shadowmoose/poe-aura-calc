@@ -215,7 +215,7 @@ class Data {
 				'Intimidate Enemies for 4 seconds on Hit': {flat: 1},
 				'Unnerve Enemies for 4 seconds on Hit': {flat: 1},
 				'Regenerate #% of Life per second': {scaling: 0.2},
-				'+#% Physical Damage Reduction': {scaling: 1}
+				'#% additional Physical Damage Reduction': {scaling: 1}
 			}
 		}
 		if(sel === 'necrian'){
