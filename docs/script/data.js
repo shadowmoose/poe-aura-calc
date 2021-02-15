@@ -84,10 +84,10 @@ class Gem {
 				}
 
 				if (val !== null && val !== undefined) {
-					if (mod.id.includes('per_minute')) val = Math.floor(val/60);
-					val = Math.floor( val * effect_increase * buff_eff * 100 ) / 100;
+					if (mod.id.includes('per_minute')) val = val/60;
+					val = val * effect_increase * buff_eff;
 				}
-				val = Math.floor(val || 0);
+				val = Math.floor(val*100 || 0)/100;
 				modText = modText.replace(/{[0-9]+}/, '#');
 				vals.push(val);
 			}
