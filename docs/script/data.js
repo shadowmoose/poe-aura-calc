@@ -139,10 +139,13 @@ class Data {
 				let base = this.data[key];
 				let ele = base['active_skill'];
 				if (!ele) return;
+				let baseItem = base['base_item'];
+				if (!baseItem) return;
 
 				const name = ele['display_name'];
 				if (!name
 					|| ignoredGems.includes(name)
+					|| baseItem['id'].includes('Royale')
 					|| !ele['types'].includes('aura')
 					|| ['totem', 'mine'].some(ig => ele['types'].includes(ig))
 					|| base.is_support
