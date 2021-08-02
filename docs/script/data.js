@@ -83,11 +83,9 @@ class Gem {
 					continue;
 				}
 
-				if (val !== null && val !== undefined) {
-					if (mod.id.includes('per_minute')) val = val/60;
-					val = val * effect_increase * buff_eff;
-				}
-				val = Math.floor(val*100 || 0)/100;
+				val = val * effect_increase * buff_eff;
+				val = mod.id.includes('per_minute') ? Math.floor(val/60*100)/100 : Math.floor(val);
+				val = val || 0;
 				modText = modText.replace(/{[0-9]+}/, '#');
 				vals.push(val);
 			}
@@ -147,6 +145,7 @@ class Data {
 					|| ['totem', 'mine'].some(ig => ele['types'].includes(ig))
 					|| base.is_support
 					|| !base.base_item
+					|| base.base_item.id.includes('Royale')
 					|| !base.static.stats
 				) return;
 
