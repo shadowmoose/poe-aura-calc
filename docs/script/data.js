@@ -25,6 +25,7 @@ const knownTranslations = {
 
 const removeModParts = [
 	/Aura grants /,
+	/Buff grants /,
 	/You and nearby Allies [^R]\w+\s/i, // Clean all non-Regen.
 	/You and nearby Allies /, // All "Regen" auras.
 	[/Enemies maimed by this skill/i, 'Nearby Enemies']  // Replace values.
@@ -221,7 +222,7 @@ class Data {
 			return {
 				'#% increased Attack Speed': {scaling: 2},
 				'#% increased Cast Speed': {scaling: 2},
-				'#% Physical Damage Reduction': {scaling: 1},
+				'#% additional Physical Damage Reduction': {scaling: 1},
 				'Onslaught': {flat: 1},
 			}
 		}
