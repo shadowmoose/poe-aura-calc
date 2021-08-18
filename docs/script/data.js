@@ -53,7 +53,7 @@ class Gem {
 	}
 
 	/** Returns an object, where each key is a generic stat line, and the value is the array of numbers to be inserted. */
-	levelStats(lvl, effect_increase, buff_eff){
+	levelStats(lvl, effect_increase){
 		console.log(this.name, 'level:', lvl)
 		if (!this.level_array[lvl]) {
 			lvl = Object.keys(this.level_array).reduce((acc, curr) => {
@@ -84,7 +84,7 @@ class Gem {
 					continue;
 				}
 
-				val = val * effect_increase * buff_eff;
+				val = val * effect_increase;
 				val = mod.id.includes('per_minute') ? Math.floor(val/60*100)/100 : Math.floor(val);
 				val = val || 0;
 				modText = modText.replace(/{[0-9]+}/, '#');
@@ -283,14 +283,17 @@ class Data {
 			
 			let percent_inc = parseInt($('#increase').val());
 			let buff_effect = parseInt($('#buffEffect').val());
-			
+
+			if (buff_effect>0)
+				percent_inc+= buff_effect;
+
 			if(this.gem_info[gem.name]['effect']>0)
 				percent_inc+= parseInt(this.gem_info[gem.name]['effect']);
 			
 			if(this.gem_info[gem.name]['generosity']>0)
 				percent_inc+= 19+parseInt(this.gem_info[gem.name]['generosity']);
 
-			let stats = gem.levelStats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100), 1 + (buff_effect/100) );
+			let stats = gem.levelStats(this.gem_info[gem.name]['level'], 1 + (percent_inc/100));
 
 			if(Object.keys(stats).length>0){
 				let cont = $("<div>").addClass('stat_block');
@@ -397,8 +400,6 @@ class Data {
 		let asc_buffs = this.ascendancy;
 		Object.keys(asc_buffs).forEach((stat)=> {
 			let val = [Math.floor(asc_buffs[stat].total)];
-			if(asc_buffs[stat].scaling)
-				val = [Math.floor(asc_buffs[stat].total * 100 * (1+((parseInt($('#buffEffect').val()))/100))) / 100];
 			if(!asc_buffs[stat].total) return;
 			if(!grouped_stats[stat])
 				grouped_stats[stat] = val;
