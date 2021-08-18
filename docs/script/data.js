@@ -237,15 +237,15 @@ class Data {
 		let sel = $('#preciseCommander').prop( "checked" );
 		if(sel)
 			return {
-				'#% increased Critical Strike Chance': {flat: 50},
-				'+#% to Global Critical Strike Multiplier': {flat: 15}
+				'#% increased Critical Strike Chance': {flat: 25},
+				'+#% to Global Critical Strike Multiplier': {flat: 10}
 			}
 	}
 	get_replenish(){
 		let sel = $('#replenishingPresence').prop( "checked" );
 		if (sel)
 			return {
-				'Regenerate #% of Life per second': {scaling: 0.2},
+				'Regenerate #% of Life per second': {flat: 1},
 			}
 	}
 
@@ -362,8 +362,7 @@ class Data {
 					if($('#replenishingPresence').prop( "checked" )){
 						Object.keys(this.replenish).forEach(name => {
 							let st = this.replenish[name];
-							st.total = st.total || 0;
-							st.total += (Math.floor(st.scaling * ( 1 + (percent_inc/100)) * 10) / 10);
+							st.total = st.flat
 						});
 					}
 
@@ -427,8 +426,6 @@ class Data {
 			let jewel_buffs = this.replenish;
 			Object.keys(jewel_buffs).forEach((stat)=> {
 				let val = [Math.floor(jewel_buffs[stat].total)];
-				if(jewel_buffs[stat].scaling)
-					val = [Math.floor(jewel_buffs[stat].total * 100 * (1+((parseInt($('#buffEffect').val()))/100))) / 100];
 				if(!jewel_buffs[stat].total) return;
 				if(!grouped_stats[stat])
 					grouped_stats[stat] = val;
